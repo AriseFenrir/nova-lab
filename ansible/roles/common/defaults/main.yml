@@ -1,0 +1,11 @@
+---
+common_packages:
+  - curl
+  - vim
+  - htop
+  - chrony
+  - ca-certificates
+  - python3-pip
+common_timezone: Europe/Paris
+common_ntp_pool: fr.pool.ntp.org
+common_banner_text: "Système géré par Ansible : toute modification manuelle sera écrasée."

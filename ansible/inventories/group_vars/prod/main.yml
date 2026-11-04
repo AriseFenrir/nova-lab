@@ -1,0 +1,5 @@
+---
+env_name: prod
+nova_greeting: "Hello NOVA — Production"
+common_banner_text: "PRODUCTION : toute intervention est tracée et soumise à validation."
+nova_api_token: "{{ vault_nova_api_token }}"    # la valeur réelle est chiffrée dans vault.yml

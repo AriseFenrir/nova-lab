@@ -1,0 +1,5 @@
+.vagrant/
+.ssh_share/
+ansible/.vault_pass_*
+*.retry
+*.log

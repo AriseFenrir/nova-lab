@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["replicaCount", "image", "app"],
+  "properties": {
+    "replicaCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "tag": { "type": "string", "not": { "enum": ["latest"] } }
+      }
+    },
+    "app": {
+      "type": "object",
+      "properties": {
+        "environment": { "type": "string", "enum": ["dev", "preprod", "prod"] }
+      }
+    }
+  }
+}

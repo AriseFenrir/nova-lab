@@ -1,0 +1,4 @@
+---
+env_name: preprod
+nova_greeting: "Hello NOVA — Préprod"
+nova_api_token: "{{ vault_nova_api_token }}"    # la valeur réelle est chiffrée dans vault.yml

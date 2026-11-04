@@ -1,0 +1,7 @@
+---
+- name: Socle commun NOVA
+  hosts: nova
+  become: true
+  roles:
+    - role: common
+      tags: [baseline]

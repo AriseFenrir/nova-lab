@@ -1,0 +1,9 @@
+---
+profile: moderate
+exclude_paths:
+  - .vagrant/
+  - charts/
+  - tests/
+skip_list:
+  # Les variables nova_* sont un CONTRAT d'inventaire partagé entre rôles (choix assumé, voir ADR-03)
+  - var-naming[no-role-prefix]

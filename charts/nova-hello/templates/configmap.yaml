@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nova-hello.fullname" . }}-html
+  labels:
+    {{- include "nova-hello.labels" . | nindent 4 }}
+data:
+  index.html: |
+    <!doctype html>
+    <html lang="fr">
+    <head>
+      <meta charset="utf-8">
+      <title>{{ .Values.app.greeting }}</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 12vh; color: #091B31; }
+        h1 { color: #1F3864; }
+        .env { display: inline-block; padding: 4px 14px; border-radius: 12px; background: #2BB3A3; color: #fff; }
+      </style>
+    </head>
+    <body>
+      <h1>{{ .Values.app.greeting }}</h1>
+      <p>Environnement : <span class="env">{{ .Values.app.environment }}</span></p>
+      <p>Application v{{ .Values.app.version }} &middot; chart {{ .Chart.Name }}-{{ .Chart.Version }}</p>
+    </body>
+    </html>

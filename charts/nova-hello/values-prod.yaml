@@ -1,0 +1,11 @@
+replicaCount: 2
+app:
+  environment: prod
+  greeting: "Hello NOVA — Production"
+ingress:
+  host: hello.prod.nova.local
+resources:
+  requests: { cpu: 50m, memory: 48Mi }
+  limits: { cpu: 200m, memory: 96Mi }
+networkPolicy:
+  enabled: true

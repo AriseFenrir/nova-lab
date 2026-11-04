@@ -1,0 +1,8 @@
+replicaCount: 1
+app:
+  environment: preprod
+  greeting: "Hello NOVA — Préprod"
+ingress:
+  host: hello.preprod.nova.local
+networkPolicy:
+  enabled: false

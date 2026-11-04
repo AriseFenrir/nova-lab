@@ -1,0 +1,22 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "nova-hello.fullname" . }}
+  labels:
+    {{- include "nova-hello.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "nova-hello.selectorLabels" . | nindent 6 }}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:          # le contrôleur Ingress (Traefik) vit dans kube-system
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        - podSelector: {}             # pods du même namespace (dont le pod de test Helm)
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}

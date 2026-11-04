@@ -1,0 +1,4 @@
+---
+# Variables communes à tous les environnements
+nova_app_name: nova-hello
+nova_namespace: nova

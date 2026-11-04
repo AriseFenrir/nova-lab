@@ -1,0 +1,47 @@
+---
+- name: Mettre à jour le cache APT
+  ansible.builtin.apt:
+    lock_timeout: 120
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Installer les paquets de base
+  ansible.builtin.apt:
+    lock_timeout: 120
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Fixer le fuseau horaire
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+
+- name: S'assurer que le dossier de configuration chrony existe
+  ansible.builtin.file:
+    path: /etc/chrony/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configurer la source de temps (NTP)
+  ansible.builtin.template:
+    src: chrony-nova.conf.j2
+    dest: /etc/chrony/conf.d/nova.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Redémarrer chrony
+
+- name: S'assurer que chrony tourne et démarre au boot
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: Déposer la bannière d'accueil (motd)
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: "0644"

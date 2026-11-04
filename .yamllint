@@ -1,0 +1,9 @@
+extends: relaxed
+ignore: |
+  .vagrant/
+  **/vault.yml
+  tests/goss/
+  charts/nova-hello/templates/
+rules:
+  line-length:
+    max: 140

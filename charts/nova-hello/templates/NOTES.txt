@@ -1,0 +1,5 @@
+NOVA Hello {{ .Values.app.version }} : release "{{ .Release.Name }}" (namespace {{ .Release.Namespace }}).
+Environnement : {{ .Values.app.environment }}
+{{- if .Values.ingress.enabled }}
+URL : http://{{ .Values.ingress.host }}/
+{{- end }}

@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/playbook.json
+---
+- name: Installer k3s et Helm sur les nœuds
+  hosts: nova
+  become: true
+  roles:
+    - role: k3s
+      tags: [k3s]
+    - role: helm_cli
+      tags: [helm]

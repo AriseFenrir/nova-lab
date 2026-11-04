@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nova-hello
+description: Page Hello du fil rouge NOVA (nginx non privilégié + ConfigMap)
+type: application
+version: 0.1.0          # version du CHART (change quand les templates changent)
+appVersion: "1.0.0"     # version de l'APPLICATION livrée (informative)
