@@ -1,0 +1,7 @@
+---
+goss_version: v0.4.9
+goss_dir: /opt/nova/goss
+goss_specs:
+  - goss-baseline.yaml
+  - goss-k3s.yaml
+goss_specs_src: /vagrant/tests/goss

@@ -1,0 +1,56 @@
+# Spécification de conformité du socle NOVA : 1 contrôle = 1 exigence de la PSSI
+file:
+  # PSSI-01 : durcissement SSH présent et protégé
+  /etc/ssh/sshd_config.d/00-hardening.conf:
+    exists: true
+    mode: "0600"
+    owner: root
+  # PSSI-03 : fichiers sensibles
+  /etc/shadow:
+    exists: true
+    mode: "0640"
+    owner: root
+    group: shadow
+  /etc/passwd:
+    exists: true
+    mode: "0644"
+    owner: root
+
+command:
+  # PSSI-01 : configuration SSH EFFECTIVE (et non le fichier : ce que sshd applique réellement)
+  sshd_effective_config:
+    exec: "sshd -T"
+    exit-status: 0
+    stdout:
+      - "permitrootlogin no"
+      - "passwordauthentication no"
+      - "x11forwarding no"
+      - "maxauthtries 4"
+  # PSSI-05 : pare-feu actif, politique entrante = refuser
+  ufw_status:
+    exec: "ufw status verbose"
+    exit-status: 0
+    stdout:
+      - "Status: active"
+      - "deny (incoming)"
+
+kernel-param:
+  # PSSI-02 : paramètres noyau
+  kernel.randomize_va_space: { value: "2" }
+  net.ipv4.conf.all.accept_redirects: { value: "0" }
+  net.ipv4.conf.all.send_redirects: { value: "0" }
+  net.ipv4.tcp_syncookies: { value: "1" }
+  fs.suid_dumpable: { value: "0" }
+  # PSSI-07 : DÉROGATION documentée : k3s impose ip_forward = 1
+  net.ipv4.ip_forward: { value: "1" }
+
+package:
+  # PSSI-04 : maintien en condition de sécurité
+  unattended-upgrades: { installed: true }
+  # PSSI-01 : services non sécurisés proscrits
+  telnet: { installed: false }
+
+service:
+  ssh: { enabled: true, running: true }
+  chrony: { enabled: true, running: true }
+  ufw: { enabled: true, running: true }

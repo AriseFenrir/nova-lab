@@ -1,0 +1,9 @@
+---
+- name: Durcissement
+  hosts: nova
+  become: true
+  roles:
+    - role: access        # AVANT hardening : AllowGroups ops ne doit pas verrouiller l'accès
+      tags: [access]
+    - role: hardening
+      tags: [hardening]

@@ -1,5 +1,10 @@
 ---
 env_name: prod
+nova_replicas: 3
+nova_hostname: hello.prod.nova.local
 nova_greeting: "Hello NOVA — Production"
+nova_network_policy: true
+nova_api_token: "{{ vault_nova_api_token }}"
 common_banner_text: "PRODUCTION : toute intervention est tracée et soumise à validation."
-nova_api_token: "{{ vault_nova_api_token }}"    # la valeur réelle est chiffrée dans vault.yml
+# group_vars/prod/main.yml  (ajouter)
+access_users: [bob]

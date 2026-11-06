@@ -1,0 +1,7 @@
+---
+- name: Audit de conformité (Compliance-as-Code avec Goss)
+  hosts: nova
+  become: true
+  roles:
+    - role: compliance
+      tags: [audit]

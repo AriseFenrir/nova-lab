@@ -1,0 +1,33 @@
+# Conformité de la couche Kubernetes : valeurs attendues injectées depuis l'inventaire
+service:
+  k3s: { enabled: true, running: true }
+
+port:
+  tcp6:6443: { listening: true }
+
+command:
+  # PSSI : Traefik (Ingress) opérationnel
+  traefik_ready:
+    exec: "k3s kubectl -n kube-system rollout status deploy/traefik --timeout=10s"
+    exit-status: 0
+  node_ready:
+    exec: "k3s kubectl get nodes --no-headers"
+    exit-status: 0
+    stdout: ["Ready"]
+  # nombre de réplicas disponibles = valeur de l'inventaire
+  replicas_available:
+    exec: "k3s kubectl -n nova get deploy nova-hello -o jsonpath='{.status.availableReplicas}'"
+    exit-status: 0
+    stdout: ["{{ .Vars.replicas }}"]
+  # PSSI-09 : conteneur non privilégié, système de fichiers en lecture seule
+  readonly_rootfs:
+    exec: "k3s kubectl -n nova get deploy nova-hello -o jsonpath='{.spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem}'"
+    exit-status: 0
+    stdout: ["true"]
+{{ if eq .Vars.netpol "true" }}
+  # PSSI-08 : isolation réseau applicative exigée en production
+  networkpolicy_present:
+    exec: "k3s kubectl -n nova get networkpolicy nova-hello -o name"
+    exit-status: 0
+    stdout: ["networkpolicy"]
+{{ end }}

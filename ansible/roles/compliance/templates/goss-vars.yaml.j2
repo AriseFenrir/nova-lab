@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# Valeurs attendues, dérivées de l'inventaire : une seule source de vérité.
+env: {{ env_name }}
+replicas: {{ nova_replicas }}
+netpol: "{{ nova_network_policy | bool | lower }}"

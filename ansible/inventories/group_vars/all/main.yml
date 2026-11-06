@@ -2,3 +2,8 @@
 # Variables communes à tous les environnements
 nova_app_name: nova-hello
 nova_namespace: nova
+nova_app_version: "1.0.0"                    # semver à 3 chiffres (voir piège ci-dessous)
+nova_image_repository: nginxinc/nginx-unprivileged
+nova_image_tag: "1.27-alpine"                # jamais "latest" (le schéma Helm le refuse)
+access_users: []                    # défaut : personne de plus que vagrant
+hardening_ssh_allow_groups: [ops]   # SSH réservé au groupe ops

@@ -1,0 +1,121 @@
+---
+# ---------- SSH (PSSI-01) ----------
+- name: SSH | bannière légale
+  ansible.builtin.copy:
+    dest: /etc/issue.net
+    content: "Accès réservé aux personnes autorisées. Toute activité est journalisée.\n"
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [ssh]
+
+- name: SSH | fichier de durcissement (drop-in prioritaire)
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Recharger sshd
+  tags: [ssh]
+
+# ---------- Noyau (PSSI-02) ----------
+- name: Noyau | paramètres sysctl durcis
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-nova-hardening.conf
+    sysctl_set: true
+    state: present
+    reload: true
+  loop: "{{ hardening_sysctl | dict2items }}"
+  tags: [sysctl]
+
+- name: Noyau | interdire les modules inutiles
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/90-nova-hardening.conf
+    content: |
+      {% for m in hardening_blacklisted_modules %}
+      install {{ m }} /bin/true
+      blacklist {{ m }}
+      {% endfor %}
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [sysctl]
+
+# ---------- Fichiers sensibles (PSSI-03) ----------
+- name: Fichiers | permissions des fichiers sensibles
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /etc/passwd, group: root, mode: "0644" }
+    - { path: /etc/group, group: root, mode: "0644" }
+    - { path: /etc/shadow, group: shadow, mode: "0640" }
+    - { path: /etc/ssh/sshd_config, group: root, mode: "0600" }
+  tags: [files]
+
+# ---------- Maintien en condition de sécurité (PSSI-04) ----------
+- name: MCS | installer unattended-upgrades
+  ansible.builtin.apt:
+    lock_timeout: 120
+    name: unattended-upgrades
+    state: present
+  tags: [packages]
+
+- name: MCS | activer les mises à jour de sécurité automatiques
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [packages]
+
+- name: Paquets | retirer les services non sécurisés
+  ansible.builtin.apt:
+    lock_timeout: 120
+    name: "{{ hardening_removed_packages }}"
+    state: absent
+  tags: [packages]
+
+# ---------- Pare-feu (PSSI-05) ----------
+- name: Pare-feu | autoriser les flux légitimes AVANT l'activation
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port | string }}"
+    proto: tcp
+    src: "{{ item.src }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ hardening_firewall_rules }}"
+  when: hardening_firewall_enabled | bool
+  tags: [firewall]
+
+- name: Pare-feu | autoriser les réseaux internes de k3s (pods et services)
+  community.general.ufw:
+    rule: allow
+    src: "{{ item }}"
+    comment: "k3s réseau interne"
+  loop: "{{ hardening_k3s_cidrs }}"
+  when: hardening_firewall_enabled | bool
+  tags: [firewall]
+
+- name: Pare-feu | politique par défaut entrante = refuser
+  community.general.ufw:
+    default: deny
+    direction: incoming
+  when: hardening_firewall_enabled | bool
+  tags: [firewall]
+
+- name: Pare-feu | activer ufw
+  community.general.ufw:
+    state: enabled
+    logging: low
+  when: hardening_firewall_enabled | bool
+  tags: [firewall]

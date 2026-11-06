@@ -1,0 +1,21 @@
+---
+- name: "ÉTAPE 1/2 — Préprod : déploiement + smoke test"
+  hosts: preprod
+  become: true
+  any_errors_fatal: true            # un échec ici interrompt TOUT le run : prod jamais touchée
+  roles:
+    - role: nova_release
+      tags: [release]
+
+- name: "ÉTAPE 2/2 — Prod : promotion après validation"
+  hosts: prod
+  become: true
+  pre_tasks:
+    - name: Validation humaine de la promotion
+      ansible.builtin.pause:
+        prompt: "Préprod validée. Promouvoir vers PROD ? (Entrée = oui, Ctrl-C puis A = annuler)"
+      when: nova_require_approval | default(true) | bool
+      run_once: true
+  roles:
+    - role: nova_release
+      tags: [release]

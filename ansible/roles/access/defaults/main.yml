@@ -1,0 +1,4 @@
+---
+access_group: ops
+access_keys_dir: /home/vagrant/.ssh
+access_users: []

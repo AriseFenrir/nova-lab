@@ -1,0 +1,72 @@
+- name: Déploiement protégé (release + smoke test + rollback automatique)
+  block:
+    - name: Déployer ou mettre à jour la release Helm
+      kubernetes.core.helm:
+        name: "{{ nova_release_name }}"
+        chart_ref: "{{ nova_chart_dest }}"
+        release_namespace: "{{ nova_namespace }}"
+        create_namespace: true
+        kubeconfig: "{{ nova_kubeconfig }}"
+        wait: true
+        wait_timeout: 3m
+        atomic: true
+        values:
+          replicaCount: "{{ nova_replicas | int }}"
+          image:
+            repository: "{{ nova_image_repository }}"
+            tag: "{{ nova_image_tag }}"
+          app:
+            environment: "{{ env_name }}"
+            greeting: "{{ nova_greeting }}"
+            version: "{{ nova_app_version }}"
+          ingress:
+            host: "{{ nova_hostname }}"
+          networkPolicy:
+            enabled: "{{ nova_network_policy | bool }}"
+          secret:
+            apiToken: "{{ nova_api_token }}"
+      register: nova_helm_result
+      no_log: true            # les valeurs contiennent un secret : ne jamais l'afficher
+
+    - name: Afficher la révision déployée
+      ansible.builtin.debug:
+        msg: "{{ nova_release_name }} déployée en révision {{ nova_helm_result.status.revision }} sur {{ env_name }}"
+
+    - name: Smoke test HTTP depuis le poste de contrôle
+      ansible.builtin.uri:
+        url: "http://{{ hostvars[inventory_hostname].ansible_host }}/"
+        headers:
+          Host: "{{ nova_hostname }}"
+        return_content: true
+        status_code: 200
+      register: nova_smoke
+      delegate_to: localhost
+      become: false
+      retries: 10
+      delay: 6
+      until: nova_smoke.status == 200 and (nova_smoke_expect in nova_smoke.content)
+      changed_when: false
+
+  rescue:
+    - name: Lire l'état courant de la release
+      kubernetes.core.helm_info:
+        name: "{{ nova_release_name }}"
+        release_namespace: "{{ nova_namespace }}"
+        kubeconfig: "{{ nova_kubeconfig }}"
+      register: nova_info
+
+    - name: Rollback vers la révision précédente (seulement si Helm a réussi mais le test a échoué)
+      ansible.builtin.command: >-
+        helm rollback {{ nova_release_name }} {{ (nova_info.status.revision | int) - 1 }}
+        --namespace {{ nova_namespace }} --wait --timeout 3m
+      environment:
+        KUBECONFIG: "{{ nova_kubeconfig }}"
+      when:
+        - nova_helm_result is defined
+        - nova_helm_result is succeeded
+        - (nova_info.status.revision | default(0) | int) > 1
+      changed_when: true
+
+    - name: Échec explicite (stoppe la promotion)
+      ansible.builtin.fail:
+        msg: "Déploiement invalide sur {{ env_name }} : retour à l'état précédent, promotion stoppée."

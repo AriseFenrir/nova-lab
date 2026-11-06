@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# Fichier chargé EN PREMIER (préfixe 00-) : sshd conserve la 1re valeur rencontrée.
+PermitRootLogin {{ hardening_ssh_permit_root }}
+PasswordAuthentication {{ hardening_ssh_password_auth }}
+PermitEmptyPasswords no
+X11Forwarding no
+MaxAuthTries {{ hardening_ssh_max_auth_tries }}
+LoginGraceTime 30
+ClientAliveInterval 300
+ClientAliveCountMax 2
+LogLevel VERBOSE
+Banner /etc/issue.net
+{% if hardening_ssh_allow_groups | length > 0 %}
+AllowGroups {{ hardening_ssh_allow_groups | join(' ') }}
+{% endif %}

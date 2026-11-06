@@ -1,0 +1,15 @@
+---
+nova_release_name: nova-hello
+nova_namespace: nova
+nova_chart_src: /vagrant/charts/nova-hello
+nova_chart_dest: /opt/nova/charts/nova-hello
+nova_kubeconfig: /etc/rancher/k3s/k3s.yaml
+nova_app_version: "1.0.0"
+nova_image_repository: nginxinc/nginx-unprivileged
+nova_image_tag: "1.27-alpine"
+nova_replicas: 1
+nova_greeting: "Hello NOVA"
+nova_hostname: hello.nova.local
+nova_network_policy: false
+nova_api_token: ""
+nova_smoke_expect: "{{ nova_greeting }}"

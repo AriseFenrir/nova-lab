@@ -1,0 +1,52 @@
+---
+- name: Créer le répertoire des spécifications
+  ansible.builtin.file:
+    path: "{{ goss_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Installer Goss {{ goss_version }}
+  ansible.builtin.get_url:
+    url: "https://github.com/goss-org/goss/releases/download/{{ goss_version }}/goss-linux-amd64"
+    dest: /usr/local/bin/goss
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Déposer les spécifications de conformité
+  ansible.builtin.copy:
+    src: "{{ goss_specs_src }}/{{ item }}"
+    dest: "{{ goss_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ goss_specs }}"
+
+- name: Générer les valeurs attendues pour cet environnement
+  ansible.builtin.template:
+    src: goss-vars.yaml.j2
+    dest: "{{ goss_dir }}/vars.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Exécuter l'audit
+  ansible.builtin.command: >-
+    goss --vars {{ goss_dir }}/vars.yaml --gossfile {{ goss_dir }}/{{ item }}
+    validate --format documentation --no-color
+  loop: "{{ goss_specs }}"
+  register: goss_results
+  changed_when: false
+  failed_when: false
+
+- name: Verdict de conformité
+  ansible.builtin.assert:
+    that: item.rc == 0
+    fail_msg: "{{ item.stdout }}"
+    success_msg: "{{ item.item }} : conforme"
+    quiet: false
+  loop: "{{ goss_results.results }}"
+  loop_control:
+    label: "{{ item.item }}"

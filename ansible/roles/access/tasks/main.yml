@@ -1,0 +1,37 @@
+---
+- name: Groupe d'accès technique
+  ansible.builtin.group:
+    name: "{{ access_group }}"
+    state: present
+
+- name: Comptes nominatifs autorisés sur CET environnement
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "{{ access_group }}"
+    append: true
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ access_users }}"
+
+- name: Clés publiques SSH des comptes nominatifs
+  ansible.posix.authorized_key:
+    user: "{{ item }}"
+    key: "{{ lookup('ansible.builtin.file', access_keys_dir + '/' + item + '.pub') }}"
+    state: present
+    exclusive: true
+  loop: "{{ access_users }}"
+
+- name: Le compte technique vagrant reste administrateur (membre du groupe)
+  ansible.builtin.user:
+    name: vagrant
+    groups: "{{ access_group }}"
+    append: true
+
+- name: Droits sudo du groupe d'accès
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ access_group }}"
+    content: "%{{ access_group }} ALL=(ALL) NOPASSWD: ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
