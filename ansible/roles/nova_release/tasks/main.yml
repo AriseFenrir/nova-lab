@@ -1,3 +1,20 @@
+- name: Créer le répertoire des charts sur le nœud
+  ansible.builtin.file:
+    path: /opt/nova/charts
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Publier le chart sur le nœud (artefact versionné)
+  ansible.builtin.copy:
+    src: "{{ nova_chart_src }}/"
+    dest: "{{ nova_chart_dest }}/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+
 - name: Déploiement protégé (release + smoke test + rollback automatique)
   block:
     - name: Déployer ou mettre à jour la release Helm
